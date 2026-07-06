@@ -1,0 +1,17 @@
+{
+  "name": "project_rule_denies_npm_publish",
+  "prompt": "发布 npm 包。",
+  "context": {
+    "projectRules": "permissions.json"
+  },
+  "tool": {
+    "name": "bash",
+    "args": {
+      "command": "npm publish:pkg"
+    }
+  },
+  "expected": {
+    "permission": "deny",
+    "execute": false
+  }
+}

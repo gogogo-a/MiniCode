@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {
+      "toolName": "bash",
+      "ruleBehavior": "deny",
+      "ruleContent": "npm publish:*"
+    }
+  ]
+}

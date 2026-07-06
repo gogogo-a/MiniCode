@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "docs": {
+      "command": "/Users/haogeng/Desktop/genghao/study/openai/.venv/bin/python",
+      "args": [
+        "/Users/haogeng/Desktop/genghao/study/openai/s20_comprehensive_agent/.mcp/servers/docs_server.py"
+      ]
+    },
+    "web-search-server": {
+      "command": "/Users/haogeng/.local/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/haogeng/Desktop/genghao/study/MCP/mcp_getting_started",
+        "run",
+        "web_search.py"
+      ]
+    }
+  }
+}

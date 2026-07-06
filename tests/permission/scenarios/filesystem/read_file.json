@@ -1,0 +1,15 @@
+{
+  "name": "filesystem_read_file_allowed",
+  "prompt": "读取 README.md 的前 20 行。",
+  "tool": {
+    "name": "read_file",
+    "args": {
+      "path": "README.md",
+      "limit": 20
+    }
+  },
+  "expected": {
+    "permission": "allow",
+    "execute": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "rules": [
+    {
+      "toolName": "bash",
+      "ruleBehavior": "deny",
+      "ruleContent": "npm publish:*"
+    },
+    {
+      "toolName": "read_file",
+      "ruleBehavior": "allow",
+      "ruleContent": "*"
+    }
+  ]
+}

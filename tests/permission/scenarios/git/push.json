@@ -1,0 +1,14 @@
+{
+  "name": "git_push_denied",
+  "prompt": "推送当前分支。",
+  "tool": {
+    "name": "bash",
+    "args": {
+      "command": "git push"
+    }
+  },
+  "expected": {
+    "permission": "deny",
+    "execute": false
+  }
+}

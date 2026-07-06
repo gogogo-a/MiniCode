@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment
+.env
+.venv/
+venv/
+
+# macOS and IDE
+.DS_Store
+.idea/
+*.iml
+
+# MiniCode runtime state
+.agent/
+.mailboxes/
+.memory/
+.tasks/
+.task_outputs/
+.transcripts/
+.worktrees/
+*.jsonl
+
+# Node artifacts
+node_modules/
+npm-debug.log*
+

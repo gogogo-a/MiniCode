@@ -1,0 +1,18 @@
+{
+  "name": "subagent_write_requires_lead",
+  "prompt": "让子 agent 写入 subagent_permission_test.txt。",
+  "context": {
+    "agent": "alice"
+  },
+  "tool": {
+    "name": "write_file",
+    "args": {
+      "path": "subagent_permission_test.txt",
+      "content": "hello"
+    }
+  },
+  "expected": {
+    "permission": "ask",
+    "execute": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "regression_project_deny_overrides_session_allow",
+  "prompt": "发布 npm 包。",
+  "context": {
+    "projectRules": "permissions.json",
+    "sessionRules": [
+      {
+        "toolName": "bash",
+        "ruleBehavior": "allow",
+        "ruleContent": "npm publish:*"
+      }
+    ]
+  },
+  "tool": {
+    "name": "bash",
+    "args": {
+      "command": "npm publish:pkg"
+    }
+  },
+  "expected": {
+    "permission": "deny",
+    "execute": false
+  }
+}

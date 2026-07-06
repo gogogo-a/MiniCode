@@ -1,0 +1,14 @@
+{
+  "name": "unknown_tool_becomes_ask",
+  "prompt": "使用一个未注册工具完成任务。",
+  "tool": {
+    "name": "custom_tool",
+    "args": {
+      "value": "anything"
+    }
+  },
+  "expected": {
+    "permission": "ask",
+    "execute": false
+  }
+}
