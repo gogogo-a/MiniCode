@@ -1,0 +1,21 @@
+{
+  "name": "live_hook_prevent_continuation",
+  "prompt": "请只使用相对路径 README.md，调用 read_file 工具读取它，最多读取 20 行。读取后用一句中文回答文件内容里是否出现 StopHookLive。",
+  "setup": {
+    "files": {
+      "README.md": "StopHookLive smoke\n"
+    },
+    "hooks": [
+      {
+        "event": "PostToolUse",
+        "callback": "tool_hooks.stop_after_tool"
+      }
+    ]
+  },
+  "expected": {
+    "tools": ["read_file"],
+    "events": ["PostToolUse"],
+    "tool_output_contains": "StopHookLive",
+    "final_contains": ""
+  }
+}

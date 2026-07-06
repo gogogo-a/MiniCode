@@ -1,0 +1,24 @@
+{
+  "name": "unknown_tool_becomes_ask",
+  "domain": "permission",
+  "prompt": "使用一个未注册工具完成任务。",
+  "expected": {
+    "permission": "ask",
+    "tool_executed": false,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "custom_tool",
+        "args": {
+          "value": "anything"
+        }
+      }
+    ],
+    "final": "需要确认未知工具。"
+  }
+}

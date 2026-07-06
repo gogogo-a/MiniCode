@@ -1,0 +1,41 @@
+{
+  "name": "context_appends",
+  "domain": "hook",
+  "prompt": "读取 README.md",
+  "setup": {
+    "files": {
+      "README.md": "MiniCode"
+    },
+    "hooks": [
+      {
+        "event": "PostToolUse",
+        "callback": "tool_hooks.add_first_context"
+      },
+      {
+        "event": "PostToolUse",
+        "callback": "tool_hooks.add_second_context"
+      }
+    ]
+  },
+  "expected": {
+    "permission": "allow",
+    "tool_executed": true,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse"
+    ],
+    "final_contains": "上下文"
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "read_file",
+        "args": {
+          "path": "README.md"
+        }
+      }
+    ],
+    "final": "上下文已追加。"
+  }
+}

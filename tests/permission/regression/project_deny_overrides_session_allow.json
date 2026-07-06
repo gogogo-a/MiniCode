@@ -1,5 +1,6 @@
 {
   "name": "regression_project_deny_overrides_session_allow",
+  "domain": "permission",
   "prompt": "发布 npm 包。",
   "context": {
     "projectRules": "permissions.json",
@@ -11,14 +12,23 @@
       }
     ]
   },
-  "tool": {
-    "name": "bash",
-    "args": {
-      "command": "npm publish:pkg"
-    }
-  },
   "expected": {
     "permission": "deny",
-    "execute": false
+    "tool_executed": false,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "bash",
+        "args": {
+          "command": "npm publish:pkg"
+        }
+      }
+    ],
+    "final": "已拒绝发布。"
   }
 }

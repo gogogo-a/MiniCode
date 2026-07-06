@@ -29,6 +29,7 @@ from config import (
     TOOL_RESULTS_DIR,
     TRANSCRIPT_DIR,
 )
+from hooks import HookEvent, trigger_hooks
 from llm import RecoveryState, chat_with_system
 
 
@@ -144,16 +145,20 @@ def fallback_summary(messages: list, transcript_path: Path) -> str:
 
 
 def compact_history(messages: list) -> list:
+    trigger_hooks(HookEvent.PRE_COMPACT, messages)
     transcript_path = write_transcript(messages)
     print(f"[transcript saved: {transcript_path}]")
     try:
         summary = summarize_history(messages)
     except Exception:
         summary = fallback_summary(messages, transcript_path)
-    return [{"role": "user", "content": f"[Compacted]\nTranscript: {transcript_path}\n\n{summary}"}]
+    compacted = [{"role": "user", "content": f"[Compacted]\nTranscript: {transcript_path}\n\n{summary}"}]
+    trigger_hooks(HookEvent.POST_COMPACT, compacted)
+    return compacted
 
 
 def reactive_compact(messages: list) -> list:
+    trigger_hooks(HookEvent.PRE_COMPACT, messages)
     print("[reactive compact]")
     transcript_path = write_transcript(messages)
     print(f"[reactive transcript saved: {transcript_path}]")
@@ -162,7 +167,9 @@ def reactive_compact(messages: list) -> list:
     except Exception:
         summary = fallback_summary(messages, transcript_path)
     tail = messages[-5:] if len(messages) > 5 else messages
-    return [{"role": "user", "content": f"[Reactive compact]\nTranscript: {transcript_path}\n\n{summary}"}, *tail]
+    compacted = [{"role": "user", "content": f"[Reactive compact]\nTranscript: {transcript_path}\n\n{summary}"}, *tail]
+    trigger_hooks(HookEvent.POST_COMPACT, compacted)
+    return compacted
 
 
 def compact_messages(messages: list) -> list:

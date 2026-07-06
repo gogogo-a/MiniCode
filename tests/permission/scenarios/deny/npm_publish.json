@@ -1,14 +1,16 @@
 {
-  "name": "replay_delete_root_is_denied",
+  "name": "project_rule_denies_npm_publish",
   "domain": "permission",
-  "prompt": "帮我删除根目录。",
+  "prompt": "发布 npm 包。",
+  "context": {
+    "projectRules": "permissions.json"
+  },
   "expected": {
     "permission": "deny",
     "tool_executed": false,
     "events": [
       "UserPromptSubmit",
-      "PreToolUse",
-      "PermissionDenied"
+      "PreToolUse"
     ]
   },
   "fake_model": {
@@ -16,10 +18,10 @@
       {
         "name": "bash",
         "args": {
-          "command": "rm -rf /"
+          "command": "npm publish:pkg"
         }
       }
     ],
-    "final": "已拒绝危险操作。"
+    "final": "已拒绝发布。"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "live_write_file_ask",
+  "prompt": "请只调用 write_file 工具，把 ask live smoke 写入 permission_live_write.txt。不要调用其它工具。",
+  "setup": {},
+  "expected": {
+    "tools": [],
+    "events": ["PreToolUse", "PermissionRequest"],
+    "max_tool_calls": 0
+  }
+}

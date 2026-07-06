@@ -11,15 +11,15 @@ ROOT = Path(__file__).resolve().parent
 
 
 def format_summary(summary: dict) -> str:
-    return shared_format_summary("Permission", summary)
+    return shared_format_summary("Hook", summary)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run permission prompt scenario tests.")
+    parser = argparse.ArgumentParser(description="Run hook prompt scenario tests.")
     parser.add_argument(
         "root",
         nargs="?",
-        default=str(ROOT / "tests" / "permission" / "scenarios"),
+        default=str(ROOT / "tests" / "hook" / "scenarios"),
         help="Scenario directory.",
     )
     args = parser.parse_args()

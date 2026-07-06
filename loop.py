@@ -13,6 +13,7 @@
 """
 
 import json
+from dataclasses import dataclass
 
 from background_tasks import collect_background_results, should_run_background, start_background_task
 from compact import compact_history, compact_messages, reactive_compact
@@ -23,14 +24,20 @@ from config import (
     MAX_CONTINUATIONS,
     MAX_REACTIVE_COMPACTS,
 )
-from hooks import trigger_hooks
+from hooks import HookEvent, HookOutcome, HookResult, trigger_hooks
 from llm import RecoveryState, chat_with_system, is_prompt_too_long_error
 from memory import consolidate_memories, extract_memories, inject_memories, load_memories
 from mcp_plugin import assemble_tool_pool
+from permission import PermissionBehavior, project_permission_floor
 from reminders import collect_reminders
 from system_prompt import get_system_prompt, update_context
 from team import inject_lead_inbox
 from tools import TOOL_HANDLERS, TOOLS, call_tool
+
+
+@dataclass
+class LoopState:
+    stop_hook_active: bool = False
 
 
 def current_tool_pool() -> tuple[list, dict]:
@@ -83,6 +90,40 @@ def execute_tool_call(tool_call: dict, handlers: dict, args: dict | None = None)
     return call_tool(handler, args) if handler else f"Unknown: {name}"
 
 
+def _tool_call_with_args(tool_call: dict, args: dict) -> dict:
+    return {
+        **tool_call,
+        "function": {
+            **tool_call["function"],
+            "arguments": json.dumps(args, ensure_ascii=False),
+        },
+    }
+
+
+def _is_failure_output(output) -> bool:
+    text = str(output)
+    return text.startswith("Error:") or text.startswith("Unknown:")
+
+
+def _blocking_message(result: HookResult) -> str | None:
+    if result.outcome == HookOutcome.BLOCKING:
+        return result.message or "Blocked by hook."
+    if result.permission_behavior in (PermissionBehavior.DENY, PermissionBehavior.ASK):
+        return result.message or "Blocked by permission hook."
+    return None
+
+
+def handle_stop_hooks(messages: list, loop_state: LoopState) -> bool:
+    if loop_state.stop_hook_active:
+        return False
+    result = trigger_hooks(HookEvent.STOP, messages)
+    if result.outcome == HookOutcome.BLOCKING:
+        loop_state.stop_hook_active = True
+        messages.append({"role": "user", "content": result.message or "Revise the final answer."})
+        return True
+    return False
+
+
 def inject_background_notifications(messages: list):
     notifications = collect_background_results() + collect_reminders()
     for notification in notifications:
@@ -97,6 +138,7 @@ def inject_team_inbox(messages: list):
 
 def agent_loop(messages: list):
     state = RecoveryState()
+    loop_state = LoopState()
     max_tokens = DEFAULT_MAX_TOKENS
     memory_turn = len(messages) - 1 if messages and isinstance(messages[-1].get("content"), str) else None
     memories_content = load_memories(messages)
@@ -117,9 +159,7 @@ def agent_loop(messages: list):
                 continue
             return
         if not message.get("tool_calls"):
-            force = trigger_hooks("Stop", messages)
-            if force:
-                messages.append({"role": "user", "content": force})
+            if handle_stop_hooks(messages, loop_state):
                 continue
             messages.append({"role": "assistant", "content": message.get("content", "")})
             extract_memories(messages)
@@ -130,9 +170,18 @@ def agent_loop(messages: list):
         for tool_call in message["tool_calls"]:
             name = tool_call["function"]["name"]
             args = json.loads(tool_call["function"]["arguments"])
-            blocked = trigger_hooks("PreToolUse", tool_call)
+            pre_result = trigger_hooks(HookEvent.PRE_TOOL_USE, tool_call)
+            if pre_result.updated_input:
+                args.update(pre_result.updated_input)
+                tool_call = _tool_call_with_args(tool_call, args)
+            floor = project_permission_floor(tool_call)
+            if floor and floor.behavior in (PermissionBehavior.DENY, PermissionBehavior.ASK):
+                blocked = f"Permission denied: {floor.reason}" if floor.behavior == PermissionBehavior.DENY else f"Permission required: {floor.reason}"
+                tool_results.append({"role": "tool", "tool_call_id": tool_call["id"], "content": blocked})
+                continue
+            blocked = _blocking_message(pre_result)
             if blocked:
-                tool_results.append({"role": "tool", "tool_call_id": tool_call["id"], "content": str(blocked)})
+                tool_results.append({"role": "tool", "tool_call_id": tool_call["id"], "content": blocked})
                 continue
             print(f"\033[33m> 使用的工具为：{name}\033[0m")
             if name == "compact":
@@ -154,13 +203,24 @@ def agent_loop(messages: list):
                 })
                 continue
             output = execute_tool_call(tool_call, handlers, args)
-            trigger_hooks("PostToolUse", tool_call, output)
+            if _is_failure_output(output):
+                trigger_hooks(HookEvent.POST_TOOL_USE_FAILURE, tool_call, output)
+            post_result = trigger_hooks(HookEvent.POST_TOOL_USE, tool_call, output)
             print(f"输出结果为：{str(output)[:200]}")
             tool_results.append({
                 "role": "tool",
                 "tool_call_id": tool_call["id"],
                 "content": output,
             })
+            if post_result.additional_context:
+                tool_results.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "content": post_result.additional_context,
+                })
+            if post_result.prevent_continuation:
+                messages.extend(tool_results)
+                return
         messages.extend(tool_results)
         inject_background_notifications(messages)
         inject_team_inbox(messages)

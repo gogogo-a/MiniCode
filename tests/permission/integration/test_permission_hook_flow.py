@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 import permission
 import team
+from permission import PermissionBehavior
 
 
 def tool_call(name: str, args: dict) -> dict:
@@ -38,14 +39,16 @@ class PermissionHookFlowTests(unittest.TestCase):
     def test_permission_hook_blocks_deny(self):
         result = permission.permission_hook(tool_call("bash", {"command": "sudo reboot"}))
 
-        self.assertIn("Permission denied", result)
+        self.assertEqual(result.permission_behavior, PermissionBehavior.DENY)
+        self.assertIn("Permission denied", result.message)
 
     def test_scheduled_mode_rejects_ask_without_prompting(self):
         os.environ["SCHEDULED_MODE"] = "1"
 
         result = permission.permission_hook(tool_call("write_file", {"path": "x.txt", "content": "x"}))
 
-        self.assertIn("Permission denied", result)
+        self.assertEqual(result.permission_behavior, PermissionBehavior.DENY)
+        self.assertIn("Permission denied", result.message)
 
     def test_teammate_ask_bubbles_permission_request_to_lead(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -55,7 +58,8 @@ class PermissionHookFlowTests(unittest.TestCase):
             result = permission.permission_hook(tool_call("write_file", {"path": "x.txt", "content": "x"}))
             messages = team.BUS.read_inbox("lead")
 
-        self.assertIn("Permission requested", result)
+        self.assertEqual(result.permission_behavior, PermissionBehavior.ASK)
+        self.assertIn("Permission requested", result.message)
         self.assertEqual(messages[0]["type"], "permission_request")
         self.assertEqual(messages[0]["from"], "alice")
         self.assertEqual(messages[0]["metadata"]["tool_name"], "write_file")

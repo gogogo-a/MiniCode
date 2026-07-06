@@ -213,6 +213,14 @@ def check_permissions(tool_call, context: dict | None = None) -> PermissionDecis
     return tool_check_permissions(tool_name, args)
 
 
+def project_permission_floor(tool_call) -> PermissionDecision | None:
+    tool_name, args = tool_call_name_args(tool_call)
+    project_rule = _first_matching_rule(_load_project_rules(), tool_name, args)
+    if project_rule and project_rule.behavior in (PermissionBehavior.DENY, PermissionBehavior.ASK):
+        return _rule_decision(project_rule)
+    return None
+
+
 def resolve_permission_decision(decision: PermissionDecision, tool_call) -> PermissionDecision:
     if decision.behavior != PermissionBehavior.PASSTHROUGH:
         return decision
@@ -238,13 +246,27 @@ def _bubble_to_lead(decision: PermissionDecision, tool_call) -> str:
 
 
 def permission_hook(tool_call):
+    from hooks import HookEvent, HookResult, trigger_hooks
+
     decision = resolve_permission_decision(check_permissions(tool_call), tool_call)
     if decision.behavior == PermissionBehavior.ALLOW:
-        return None
+        return HookResult(permission_behavior=PermissionBehavior.ALLOW)
     if decision.behavior == PermissionBehavior.DENY:
-        return f"Permission denied: {decision.reason}"
+        tool_name, _ = tool_call_name_args(tool_call)
+        trigger_hooks(HookEvent.PERMISSION_DENIED, {"tool_name": tool_name, "reason": decision.reason})
+        return HookResult(permission_behavior=PermissionBehavior.DENY, message=f"Permission denied: {decision.reason}")
     if scheduled_mode():
-        return f"Permission denied in scheduled mode: {decision.reason}"
+        tool_name, _ = tool_call_name_args(tool_call)
+        trigger_hooks(HookEvent.PERMISSION_DENIED, {"tool_name": tool_name, "reason": decision.reason})
+        return HookResult(permission_behavior=PermissionBehavior.DENY, message=f"Permission denied in scheduled mode: {decision.reason}")
     if current_agent_name() != "lead":
-        return _bubble_to_lead(decision, tool_call)
-    return _ask_lead(decision, tool_call)
+        tool_name, _ = tool_call_name_args(tool_call)
+        trigger_hooks(HookEvent.PERMISSION_REQUEST, {"tool_name": tool_name, "reason": decision.reason})
+        return HookResult(permission_behavior=PermissionBehavior.ASK, message=_bubble_to_lead(decision, tool_call))
+    tool_name, _ = tool_call_name_args(tool_call)
+    trigger_hooks(HookEvent.PERMISSION_REQUEST, {"tool_name": tool_name, "reason": decision.reason})
+    result = _ask_lead(decision, tool_call)
+    if result:
+        trigger_hooks(HookEvent.PERMISSION_DENIED, {"tool_name": tool_name, "reason": result})
+        return HookResult(permission_behavior=PermissionBehavior.DENY, message=result)
+    return HookResult(permission_behavior=PermissionBehavior.ALLOW)

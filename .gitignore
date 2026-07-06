@@ -24,9 +24,9 @@ venv/
 .task_outputs/
 .transcripts/
 .worktrees/
+.live_smoke_workspace/
 *.jsonl
 
 # Node artifacts
 node_modules/
 npm-debug.log*
-

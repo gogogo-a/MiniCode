@@ -1,0 +1,36 @@
+{
+  "name": "pre_tool_updates_input",
+  "domain": "hook",
+  "prompt": "列出项目文件",
+  "setup": {
+    "files": {
+      "README.md": "MiniCode"
+    },
+    "hooks": [
+      {
+        "event": "PreToolUse",
+        "callback": "tool_hooks.update_command_to_ls"
+      }
+    ]
+  },
+  "expected": {
+    "permission": "allow",
+    "tool_executed": true,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "bash",
+        "args": {
+          "command": "cat README.md"
+        }
+      }
+    ],
+    "final": "已列出文件。"
+  }
+}

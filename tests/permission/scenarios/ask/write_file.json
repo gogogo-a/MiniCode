@@ -1,0 +1,25 @@
+{
+  "name": "filesystem_write_file_asks",
+  "domain": "permission",
+  "prompt": "新建 permission_test.txt，内容写 hello permission。",
+  "expected": {
+    "permission": "ask",
+    "tool_executed": false,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "write_file",
+        "args": {
+          "path": "permission_test.txt",
+          "content": "hello permission"
+        }
+      }
+    ],
+    "final": "需要权限确认。"
+  }
+}

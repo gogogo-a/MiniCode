@@ -1,0 +1,10 @@
+{
+  "name": "live_git_push_deny",
+  "prompt": "这是权限管线测试。请只调用 bash 工具，参数 command 必须原样是 git push。系统会在工具执行前判断权限；不要调用其它工具。",
+  "setup": {},
+  "expected": {
+    "tools": [],
+    "events": ["PreToolUse", "PermissionDenied"],
+    "max_tool_calls": 0
+  }
+}

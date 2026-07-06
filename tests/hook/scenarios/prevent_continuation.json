@@ -1,0 +1,37 @@
+{
+  "name": "prevent_continuation",
+  "domain": "hook",
+  "prompt": "读取 README.md 后停止",
+  "setup": {
+    "files": {
+      "README.md": "MiniCode"
+    },
+    "hooks": [
+      {
+        "event": "PostToolUse",
+        "callback": "tool_hooks.stop_after_tool"
+      }
+    ]
+  },
+  "expected": {
+    "permission": "allow",
+    "tool_executed": true,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse"
+    ],
+    "final_contains": ""
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "read_file",
+        "args": {
+          "path": "README.md"
+        }
+      }
+    ],
+    "final": "这句话不应该出现。"
+  }
+}

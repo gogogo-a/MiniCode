@@ -1,0 +1,28 @@
+{
+  "name": "subagent_write_requires_lead",
+  "domain": "permission",
+  "prompt": "让子 agent 写入 subagent_permission_test.txt。",
+  "context": {
+    "agent": "alice"
+  },
+  "expected": {
+    "permission": "ask",
+    "tool_executed": false,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "write_file",
+        "args": {
+          "path": "subagent_permission_test.txt",
+          "content": "hello"
+        }
+      }
+    ],
+    "final": "等待主代理审批。"
+  }
+}

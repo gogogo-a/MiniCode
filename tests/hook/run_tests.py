@@ -8,19 +8,19 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PERMISSION_TESTS = ROOT / "tests" / "permission"
-LAYERS = ("unit", "integration", "scenarios", "regression", "replay")
+HOOK_TESTS = ROOT / "tests" / "hook"
+LAYERS = ("unit", "integration", "scenarios", "regression")
 
 
 def run_layer(layer: str, show_flow: bool = False) -> int:
-    path = PERMISSION_TESTS / layer
-    print(f"Permission {layer}")
+    path = HOOK_TESTS / layer
+    print(f"Hook {layer}")
     env = dict(os.environ)
     if layer == "live" and show_flow:
         env["SHOW_LIVE_FLOW"] = "1"
     result = subprocess.run(
         [sys.executable, "-m", "unittest", "discover", "-s", str(path)],
-        cwd=ROOT.parent,
+        cwd=ROOT,
         env=env,
         text=True,
     )
@@ -41,7 +41,7 @@ def main() -> int:
     if failed:
         print("Failed layers: " + ", ".join(failed))
         return 1
-    print("Permission Test Suite PASS")
+    print("Hook Test Suite PASS")
     return 0
 
 

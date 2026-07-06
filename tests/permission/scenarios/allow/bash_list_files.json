@@ -1,0 +1,30 @@
+{
+  "name": "bash_list_files_allowed",
+  "domain": "permission",
+  "prompt": "列出当前目录文件。",
+  "setup": {
+    "files": {
+      "README.md": "MiniCode"
+    }
+  },
+  "expected": {
+    "permission": "allow",
+    "tool_executed": true,
+    "events": [
+      "UserPromptSubmit",
+      "PreToolUse",
+      "PostToolUse"
+    ]
+  },
+  "fake_model": {
+    "tool_calls": [
+      {
+        "name": "bash",
+        "args": {
+          "command": "ls"
+        }
+      }
+    ],
+    "final": "已列出文件。"
+  }
+}
